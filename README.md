@@ -37,5 +37,6 @@ Demo [`wL-demo.py`] pack and unpack an example wL dict.
 
 ## Licence
 
-wL is an open-source format defined by this conventions : 
+wL is an open-source format defined by [this conventions](https://wilhelm43.notion.site/wL-5bfa88f34a4b479ebf00b013f8ca8ba8). 
+
 wL python module is CC-BY-SA (latest).
