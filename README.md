@@ -11,25 +11,7 @@ wL's python module contain two files, `wL.py` and `wL-demo.py`. `wl.py` contain 
 
 ### Module
 
-Module contain all scripts required for your wL use.
-
-Start by importing wL using 
-```python
-import wL as wLm # example alternate name, module should not be opened with "wL" as name
-```
-
-Importing files
-```python
-mywL = wLm.wK()
-mywL.unpack(file = '…')
-```
-
-Exporting files
-```python
-file = open("file.txt", "w") # or .wL
-file.write(mywL.pack())
-file.close()
-```
+`WIP`
 
 ### Demo
 
