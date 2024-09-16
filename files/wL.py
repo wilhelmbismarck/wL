@@ -1,6 +1,8 @@
 class wL:
     """wL / File class"""
     
+    version : str = '00110'
+    
     def __init__(self):
         """wL / New object."""
         self.dict : dict = {}
@@ -17,35 +19,59 @@ class wL:
             elif isinstance(dic, dict)   :
                 for key in dic.keys()    : txt += self.pack(open = dic[key], master = str(key), tab = tab, depth = depth + 1)
             if depth > 0                 : txt += tab * (depth -1) + '<!>' + '\n'
-        elif isinstance(dic, str)   : txt += tab * (depth -1) + '<' + master + '=' + str(dic) + '>' + '\n'
+        else                             : txt += tab * (depth -1) + '<' + master + '=\"' + str(dic) + '\">' + '\n'
         return txt
                     
     def unpack(self, file : str) -> dict:
         """wl / Open wL file in self. Overwritte former dict. Also return wL dict."""
-        path = []
-        newD = {}
-        wRNm = False
-        for letter in file:
-            if   letter == ' ': '' #blank space
-            elif letter == '<':
-                wRNm = True
-                name = ''
-                data = None
-            elif letter == '>':
-                # sauvegarder la donnée
-                if data is None :
-                    if len(name) == 0 : name = 'null'
-                    if name[0] != '!' :
-                        path.append(name)
-                        newD = self.__save(newD, path, value = {})
-                    else             : path.pop()
-                else            : newD = self.__save(newD, path + [name], data)
-            elif letter == '=':
-                wRNm = False
-                data = ''
-            else              :
-                if wRNm == True : name += letter
-                else            : data += letter
+        # Definitions
+        path  = []
+        newD  = {}
+        wRNm  = ''
+        name, data = ('', '')
+        isStr = False
+        # Opening file
+        for idx in range(len(file)):
+            letter = file[idx]
+            if isStr : # STR Gestion
+                if letter in ['\'', '\"']: isStr = False
+                elif wRNm == 'name' : name += letter
+                elif wRNm == 'data' : data += letter
+            else     : # System & Raw Gestion
+                if letter in ['\'', '\"']:
+                    if   wRNm == 'name' and len(name) > 0 : raise ValueError(f'at {idx}, can\'t use multiple str [wL:06a].')
+                    elif wRNm == 'data' and len(data) > 0 : raise ValueError(f'at {idx}, can\'t use multiple str [wL:06b].')
+                    isStr = True
+                elif letter in [' ', ' ', '\n']: name = name #whitespace     
+                elif letter == '<':
+                    if wRNm in ['name', 'data']: raise ValueError(f'at {idx}, \'<\' is alone / dupe [error{wRNm}] [wL:01a].')
+                    wRNm = 'name'
+                    name = ''
+                    data = None
+                elif letter == '>':
+                    if wRNm == ''    : raise ValueError(f'at {idx}, \'>\' is alone. [wL:01b]')
+                    if len(name) == 0: raise ValueError(f'at {idx}, name is empty. [wL:03a]')
+                    wRNm = ''
+                    if data is None :
+                        if len(name) == 0 : name = 'null'
+                        if name[0] != '!' :
+                            path.append(name)
+                            newD = self.__save(newD, path, value = {})
+                        else             :
+                            if len(path) == 0: raise ValueError(f'at {idx}, \'!\' is closing void. [wL:02]')
+                            path.pop()
+                    else            : newD = self.__save(newD, path + [name], data)
+                elif letter == '=':
+                    if wRNm in ['', 'data']: raise ValueError(f'at {idx}, \'=\' is alone / dupe [error{wRNm}]. [wL:01c]')
+                    if len(name) == 0      : raise ValueError(f'at {idx}, name is empty. [wL:03b]')
+                    wRNm = 'data'
+                    data = ''
+                elif wRNm == 'name' : name += letter
+                elif wRNm == 'data' : data += letter
+        # EnfOfFile Errors
+        if not wRNm == '' : raise EOFError(f'at end, {wRNm} is not closed.  [wL:04]')
+        if len(path) > 0  : raise EOFError('at end, path is not closed.  [wL:05]')
+        # Finitions
         self.dict = newD
         return newD
                 
@@ -66,14 +92,14 @@ class wL:
         if open == 'todo'           : dic = self.dict
         else                        : dic = open
         if isinstance(dic, list) or isinstance(dic, dict) :
-            if depth >= 0                 : txt += tab * depth + '<' + master + '>' + '\n'
+            if depth >= 0                : txt += tab * depth + '<' + master + '>' + '\n'
+            if depth == 0                : txt += tab * 1 + f'<source>wL:v2:py-{self.version}:</source>\n'
             if   isinstance(dic, list)   : 
                 for i in range(len(dic)) : txt += self.exportXML(open = dic[i], master = str(i), tab = tab, depth = depth + 1)
             elif isinstance(dic, dict)   :
                 for key in dic.keys()    : txt += self.exportXML(open = dic[key], master = str(key), tab = tab, depth = depth + 1)
-            if depth >= 0                 : txt += tab * depth + '</' + master + '>' + '\n'
-        elif isinstance(dic, str)   :
-            txt += tab * depth + '<' + master + '>' + str(dic) + '</' + master + '>' + '\n'
+            if depth >= 0                : txt += tab * depth + '</' + master + '>' + '\n'
+        else                             : txt += tab * depth + '<' + master + '>' + str(dic) + '</' + master + '>' + '\n'
         return txt
     
     def get(self) -> dict:
@@ -82,12 +108,14 @@ class wL:
     
 def wL_info() -> str:
     """wL / Print informations about wL. Return current version id."""
-    print('\n\n ##### wL ############### \n')
-    print('  - by wilhelm43     [ https://scratch.mit.edu/users/wilhelm43/ ]')
-    print('  - version          [ 00103 ]')
-    print('  - licence CC-BY-SA [ https://creativecommons.org/licenses/by-sa/4.0/ ]')
-    print('\n wL is a "markup" "metalanguage" designed to store arbitrary data in a format that is both human-readable and machine-readable.')
-    print(' The design goals of wL emphasize elementary simplicity, generality, stability, and usability across all Programming language.')
-    print(' Plus, wL format does not contain no data specialisation or typing, for a linear read.')
-    print('\n ######################## \n\n')
-    return '00103'
+    print(f"""
+############### wL ###############
+          
+ [wilhelm43, version {wL().version}, CC-BY-SA]
+          
+wL is a "markup" "metalanguage" designed to store arbitrary data in a format that is both human-readable and machine-readable.
+The design goals of wL emphasize elementary simplicity, generality, stability, and usability across all programming language.
+          
+##################################
+          """)
+    return wL().version
