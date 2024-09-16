@@ -9,13 +9,7 @@ Plus, wL format does not contain no data specialisation or typing, for a linear 
 
 wL's python module contain two files, `wL.py` and `wL-demo.py`. `wl.py` contain module, functions and wL class ; while `wL-demo.py` contain a small demo of wL pack / unpack.
 
-### Module
-
 `WIP`
-
-### Demo
-
-Demo [`wL-demo.py`] pack and unpack an example wL dict.
 
 ## Licence
 
