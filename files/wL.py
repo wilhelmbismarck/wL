@@ -1,7 +1,8 @@
 class wL:
     """wL / File class"""
     
-    version : str = '00110'
+    version    : str = '00111'
+    wL_version : str = 'v1.1'
     
     def __init__(self):
         """wL / New object."""
@@ -17,13 +18,15 @@ class wL:
             if   isinstance(dic, list)   : # notice than a wL should not contain lists, but dicts with str numbers as keys.
                 for i in range(len(dic)) : txt += self.pack(open = dic[i], master = str(i), tab = tab, depth = depth + 1)
             elif isinstance(dic, dict)   :
-                for key in dic.keys()    : txt += self.pack(open = dic[key], master = str(key), tab = tab, depth = depth + 1)
+                for key in dic.keys()    : txt += self.pack(open = dic[key], master = self.__str(key), tab = tab, depth = depth + 1)
             if depth > 0                 : txt += tab * (depth -1) + '<!>' + '\n'
-        else                             : txt += tab * (depth -1) + '<' + master + '=\"' + str(dic) + '\">' + '\n'
+        else                             : txt += tab * (depth -1) + '<' + master + '=' +  self.__str(dic) + '>' + '\n'
         return txt
                     
     def unpack(self, file : str) -> dict:
         """wl / Open wL file in self. Overwritte former dict. Also return wL dict."""
+        # Start errors
+        if len(file) == 0: raise ValueError('file is blank [wL:00a].')
         # Definitions
         path  = []
         newD  = {}
@@ -31,9 +34,14 @@ class wL:
         name, data = ('', '')
         isStr = False
         # Opening file
-        for idx in range(len(file)):
+        idx = 0
+        while idx < (len(file)):
             letter = file[idx]
-            if isStr : # STR Gestion
+            if   letter == '\\' : # Backslash gestion
+                idx += 1
+                if   wRNm == 'name' : name += file[idx]
+                elif wRNm == 'data' : data += file[idx]
+            elif isStr : # STR Gestion
                 if letter in ['\'', '\"']: isStr = False
                 elif wRNm == 'name' : name += letter
                 elif wRNm == 'data' : data += letter
@@ -42,15 +50,15 @@ class wL:
                     if   wRNm == 'name' and len(name) > 0 : raise ValueError(f'at {idx}, can\'t use multiple str [wL:06a].')
                     elif wRNm == 'data' and len(data) > 0 : raise ValueError(f'at {idx}, can\'t use multiple str [wL:06b].')
                     isStr = True
-                elif letter in [' ', ' ', '\n']: name = name #whitespace     
+                elif letter in ['\x20', ' ', '\n']: name = name #whitespace     
                 elif letter == '<':
                     if wRNm in ['name', 'data']: raise ValueError(f'at {idx}, \'<\' is alone / dupe [error{wRNm}] [wL:01a].')
                     wRNm = 'name'
                     name = ''
                     data = None
                 elif letter == '>':
-                    if wRNm == ''    : raise ValueError(f'at {idx}, \'>\' is alone. [wL:01b]')
-                    if len(name) == 0: raise ValueError(f'at {idx}, name is empty. [wL:03a]')
+                    if wRNm == ''    : raise ValueError(f'at {idx}, \'>\' is alone [wL:01b].')
+                    if len(name) == 0: raise ValueError(f'at {idx}, name is empty [wL:03a].')
                     wRNm = ''
                     if data is None :
                         if len(name) == 0 : name = 'null'
@@ -58,19 +66,22 @@ class wL:
                             path.append(name)
                             newD = self.__save(newD, path, value = {})
                         else             :
-                            if len(path) == 0: raise ValueError(f'at {idx}, \'!\' is closing void. [wL:02]')
+                            if len(path) == 0: raise ValueError(f'at {idx}, \'!\' is closing void [wL:02].')
                             path.pop()
                     else            : newD = self.__save(newD, path + [name], data)
                 elif letter == '=':
-                    if wRNm in ['', 'data']: raise ValueError(f'at {idx}, \'=\' is alone / dupe [error{wRNm}]. [wL:01c]')
-                    if len(name) == 0      : raise ValueError(f'at {idx}, name is empty. [wL:03b]')
+                    if wRNm in ['', 'data']: raise ValueError(f'at {idx}, \'=\' is alone / dupe [error{wRNm}] [wL:01c].')
+                    if len(name) == 0      : raise ValueError(f'at {idx}, name is empty [wL:03b].')
                     wRNm = 'data'
                     data = ''
                 elif wRNm == 'name' : name += letter
                 elif wRNm == 'data' : data += letter
+            idx += 1
+            # While reloop
         # EnfOfFile Errors
-        if not wRNm == '' : raise EOFError(f'at end, {wRNm} is not closed.  [wL:04]')
-        if len(path) > 0  : raise EOFError('at end, path is not closed.  [wL:05]')
+        if len(newD.keys()) == 0 : raise EOFError('file does not contain data [wL:00b].')
+        if not wRNm == ''        : raise EOFError(f'at end, {wRNm} is not closed [wL:04].')
+        if len(path) > 0         : raise EOFError('at end, path is not closed [wL:05].')
         # Finitions
         self.dict = newD
         return newD
@@ -83,8 +94,20 @@ class wL:
             if key not in copyDic : copyDic[key] = {}  # Create a new dict if path is not valid
             copyDic = copyDic[key]
         # Edit last key
+        if path[-1] in copyDic.keys(): raise ValueError('file contain duplicated data [wL:07]')
         copyDic[path[-1]] = value
         return dic
+    
+    def __str(self, data, allowSystem : bool = True) -> str:
+        """wL / Functions / Convert data to str and stringify if contain system symbols."""
+        build = str(data)
+        back  = ''
+        for letter in build:
+            if letter in ['\\', '\"'] :
+                if allowSystem : back += '\\' + letter
+            else : back += letter
+        if allowSystem : return "\"" + back + "\""
+        else : return back
         
     def exportXML(self, open = 'todo', master = 'xml', tab : str = '    ', depth : int = 0) -> str:
         """wL / Pack a wL object as an XML file and return it as a txt str."""
@@ -97,9 +120,9 @@ class wL:
             if   isinstance(dic, list)   : 
                 for i in range(len(dic)) : txt += self.exportXML(open = dic[i], master = str(i), tab = tab, depth = depth + 1)
             elif isinstance(dic, dict)   :
-                for key in dic.keys()    : txt += self.exportXML(open = dic[key], master = str(key), tab = tab, depth = depth + 1)
+                for key in dic.keys()    : txt += self.exportXML(open = dic[key], master = self.__str(key, False), tab = tab, depth = depth + 1)
             if depth >= 0                : txt += tab * depth + '</' + master + '>' + '\n'
-        else                             : txt += tab * depth + '<' + master + '>' + str(dic) + '</' + master + '>' + '\n'
+        else                             : txt += tab * depth + '<' + master + '>' + self.__str(dic, False) + '</' + master + '>' + '\n'
         return txt
     
     def get(self) -> dict:
