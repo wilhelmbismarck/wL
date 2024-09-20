@@ -1,7 +1,7 @@
 class wL:
     """wL / File class"""
     
-    version    : str = '00111'
+    version    : str = '00112'
     wL_version : str = 'v1.1'
     
     def __init__(self):
@@ -23,7 +23,7 @@ class wL:
         else                             : txt += tab * (depth -1) + '<' + master + '=' +  self.__str(dic) + '>' + '\n'
         return txt
                     
-    def unpack(self, file : str) -> dict:
+def unpack(self, file : str) -> dict:
         """wl / Open wL file in self. Overwritte former dict. Also return wL dict."""
         # Start errors
         if len(file) == 0: raise ValueError('file is blank [wL:00a].')
@@ -32,7 +32,7 @@ class wL:
         newD  = {}
         wRNm  = ''
         name, data = ('', '')
-        isStr = False
+        isStr = None
         # Opening file
         idx = 0
         while idx < (len(file)):
@@ -41,15 +41,15 @@ class wL:
                 idx += 1
                 if   wRNm == 'name' : name += file[idx]
                 elif wRNm == 'data' : data += file[idx]
-            elif isStr : # STR Gestion
-                if letter in ['\'', '\"']: isStr = False
+            elif not isStr is None  : # STR Gestion
+                if letter in isStr  : isStr = None
                 elif wRNm == 'name' : name += letter
                 elif wRNm == 'data' : data += letter
             else     : # System & Raw Gestion
                 if letter in ['\'', '\"']:
                     if   wRNm == 'name' and len(name) > 0 : raise ValueError(f'at {idx}, can\'t use multiple str [wL:06a].')
                     elif wRNm == 'data' and len(data) > 0 : raise ValueError(f'at {idx}, can\'t use multiple str [wL:06b].')
-                    isStr = True
+                    isStr = letter
                 elif letter in ['\x20', ' ', '\n']: name = name #whitespace     
                 elif letter == '<':
                     if wRNm in ['name', 'data']: raise ValueError(f'at {idx}, \'<\' is alone / dupe [error{wRNm}] [wL:01a].')
