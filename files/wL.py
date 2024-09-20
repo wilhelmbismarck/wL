@@ -1,8 +1,9 @@
 class wL:
     """wL / File class"""
     
-    version    : str = '00112'
-    wL_version : str = 'v1.1'
+    version    : str   = '00113'
+    wL_version : str   = 'v1.1'
+    systemSymb : tuple = ('<', '>', '=', '!')
     
     def __init__(self):
         """wL / New object."""
@@ -23,8 +24,8 @@ class wL:
         else                             : txt += tab * (depth -1) + '<' + master + '=' +  self.__str(dic) + '>' + '\n'
         return txt
                     
-def unpack(self, file : str) -> dict:
-        """wl / Open wL file in self. Overwritte former dict. Also return wL dict."""
+    def unpack(self, file : str, forceErrors : bool = True) -> dict:
+        """wl / Open wL file in self. Overwritte former dict. Also return wL dict.\nFile needed, plus an additional parameter to ignore passive errors."""
         # Start errors
         if len(file) == 0: raise ValueError('file is blank [wL:00a].')
         # Definitions
@@ -43,14 +44,16 @@ def unpack(self, file : str) -> dict:
                 elif wRNm == 'data' : data += file[idx]
             elif not isStr is None  : # STR Gestion
                 if letter in isStr  : isStr = None
-                elif wRNm == 'name' : name += letter
-                elif wRNm == 'data' : data += letter
+                elif wRNm == 'name' : 
+                    if letter in self.systemSymb and forceErrors : raise ValueError('at {idx}, name contain system symbols (\"<\", \">\", \"=\", \"!\") [wL:08].')
+                    else                                         : name += letter
+                elif wRNm == 'data'                              : data += letter
             else     : # System & Raw Gestion
                 if letter in ['\'', '\"']:
                     if   wRNm == 'name' and len(name) > 0 : raise ValueError(f'at {idx}, can\'t use multiple str [wL:06a].')
                     elif wRNm == 'data' and len(data) > 0 : raise ValueError(f'at {idx}, can\'t use multiple str [wL:06b].')
                     isStr = letter
-                elif letter in ['\x20', ' ', '\n']: name = name #whitespace     
+                elif letter in ['\x20', ' ', '\n', '\r', '\t', '\v']: name = name #whitespace     
                 elif letter == '<':
                     if wRNm in ['name', 'data']: raise ValueError(f'at {idx}, \'<\' is alone / dupe [error{wRNm}] [wL:01a].')
                     wRNm = 'name'
