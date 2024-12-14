@@ -10,11 +10,20 @@ Plus, wL format does not contain no data specialisation or typing, for a linear 
 > "lib" refer to `wL.py`
 
 ### Importing lib
-- by downloading lib
+- by downloading lib (*add the lib in your script's repository*)
 ```python
 import wL as wLlib
 ```
-- from pip `WIP`
+- from pip
+```bash
+pip install wLpylib
+```
+```zsh
+python3 -m pip install wLpylib
+```
+```python
+import wLpylib as wLlib
+```
 
 ### Functions
 
@@ -31,7 +40,7 @@ Export a `dict` as a XML file
 wLlib.export_XML(any_dict)
 ```
 
-## Licence
+## License
 
 wL is an open-source format defined by [this conventions](https://wilhelm43.notion.site/wL-027498635f0745c586c4beaf2e36f0a1). 
 
