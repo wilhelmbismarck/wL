@@ -1,31 +1,35 @@
-class wL:
-    """wL / File class"""
-    
-    version    : str   = '00113'
-    wL_version : str   = 'v1.1'
-    systemSymb : tuple = ('<', '>', '=', '!')
-    
-    def __init__(self):
-        """wL / New object."""
-        self.dict : dict = {}
-        
-    def pack(self, open = 'todo', master : str = '', tab : str = '    ', depth : int = 0) -> str:
+## About wL
+## ========
+##
+## wL is a "markup" "metalanguage" designed to store arbitrary data in a format that is both human-readable and machine-readable.
+## The design goals of wL emphasize elementary simplicity, generality, stability, and usability across all programming language.
+##
+## - wL by       : wilhelm43
+## - lib version : 1.2.0
+## - supports wL : 1.0, 1.1
+##
+  
+__sysSymb : tuple = ("=", "<", ">", "!")
+__ver_wL  : tuple = ("1.0", "1.1")
+__ver_lib : str   = "1.2.0"
+              
+def export_wL(obj : dict, master : str = '', tab : str = '    ', depth : int = 0) -> str:
         """wL / Pack a wL object and return it as a txt str."""
-        txt : str = ''
-        if open == 'todo'           : dic = self.dict
-        else                        : dic = open
+        txt : str  = ''
+        dic : dict = obj
         if isinstance(dic, list) or isinstance(dic, dict) :
             if depth > 0                 : txt += tab * (depth -1) + '<' + master + '>' + '\n'
             if   isinstance(dic, list)   : # notice than a wL should not contain lists, but dicts with str numbers as keys.
-                for i in range(len(dic)) : txt += self.pack(open = dic[i], master = str(i), tab = tab, depth = depth + 1)
+                for i in range(len(dic)) : txt += export_wL(obj = dic[i], master = str(i), tab = tab, depth = depth + 1)
             elif isinstance(dic, dict)   :
-                for key in dic.keys()    : txt += self.pack(open = dic[key], master = self.__str(key), tab = tab, depth = depth + 1)
+                for key in dic.keys()    : txt += export_wL(obj = dic[key], master = __wLstr(key), tab = tab, depth = depth + 1)
             if depth > 0                 : txt += tab * (depth -1) + '<!>' + '\n'
-        else                             : txt += tab * (depth -1) + '<' + master + '=' +  self.__str(dic) + '>' + '\n'
+        else                             : txt += tab * (depth -1) + '<' + master + '=' +  __wLstr(dic) + '>' + '\n'
         return txt
                     
-    def unpack(self, file : str, forceErrors : bool = True) -> dict:
-        """wl / Open wL file in self. Overwritte former dict. Also return wL dict.\nFile needed, plus an additional parameter to ignore passive errors."""
+def import_wL(file : str, fE : bool = True) -> dict:
+        """wl / Open wL file in self. Overwritte former dict. Also return wL dict.
+        \nFile needed, plus an additional parameter to ignore passive errors."""
         # Start errors
         if len(file) == 0: raise ValueError('file is blank [wL:00a].')
         # Definitions
@@ -45,15 +49,15 @@ class wL:
             elif not isStr is None  : # STR Gestion
                 if letter in isStr  : isStr = None
                 elif wRNm == 'name' : 
-                    if letter in self.systemSymb and forceErrors : raise ValueError('at {idx}, name contain system symbols (\"<\", \">\", \"=\", \"!\") [wL:08].')
-                    else                                         : name += letter
-                elif wRNm == 'data'                              : data += letter
+                    if letter in __sysSymb and fE : raise ValueError('at {idx}, name contain system symbols (\"<\", \">\", \"=\", \"!\") [wL:08].')
+                    else                          : name += letter
+                elif wRNm == 'data'               : data += letter
             else     : # System & Raw Gestion
                 if letter in ['\'', '\"']:
                     if   wRNm == 'name' and len(name) > 0 : raise ValueError(f'at {idx}, can\'t use multiple str [wL:06a].')
                     elif wRNm == 'data' and len(data) > 0 : raise ValueError(f'at {idx}, can\'t use multiple str [wL:06b].')
                     isStr = letter
-                elif letter in ['\x20', ' ', '\n', '\r', '\t', '\v']: name = name #whitespace     
+                elif letter in ['\x20', ' ', '\n', '\r', '\t', '\v']: pass 
                 elif letter == '<':
                     if wRNm in ['name', 'data']: raise ValueError(f'at {idx}, \'<\' is alone / dupe [error{wRNm}] [wL:01a].')
                     wRNm = 'name'
@@ -67,11 +71,11 @@ class wL:
                         if len(name) == 0 : name = 'null'
                         if name[0] != '!' :
                             path.append(name)
-                            newD = self.__save(newD, path, value = {})
+                            newD = __wLdictSave(newD, path, value = {})
                         else             :
                             if len(path) == 0: raise ValueError(f'at {idx}, \'!\' is closing void [wL:02].')
                             path.pop()
-                    else            : newD = self.__save(newD, path + [name], data)
+                    else            : newD = __wLdictSave(newD, path + [name], data)
                 elif letter == '=':
                     if wRNm in ['', 'data']: raise ValueError(f'at {idx}, \'=\' is alone / dupe [error{wRNm}] [wL:01c].')
                     if len(name) == 0      : raise ValueError(f'at {idx}, name is empty [wL:03b].')
@@ -86,11 +90,10 @@ class wL:
         if not wRNm == ''        : raise EOFError(f'at end, {wRNm} is not closed [wL:04].')
         if len(path) > 0         : raise EOFError('at end, path is not closed [wL:05].')
         # Finitions
-        self.dict = newD
         return newD
                 
-    def __save(self, dic : dict, path : list, value = 'null') -> dict:
-        """wL / Functions / In a dict 'dic', following a list 'path of keys', edit last key with value, and return dic."""
+def __wLdictSave(dic : dict, path : list, value = 'null') -> dict:
+        """wL / Functions / In a dict, following a list 'path of keys', edit last key with value, and return dic."""
         copyDic = dic # copy of dic
         # Iterate all except last key
         for key in path[:-1]:
@@ -101,7 +104,7 @@ class wL:
         copyDic[path[-1]] = value
         return dic
     
-    def __str(self, data, allowSystem : bool = True) -> str:
+def __wLstr(data, allowSystem : bool = True) -> str:
         """wL / Functions / Convert data to str and stringify if contain system symbols."""
         build = str(data)
         back  = ''
@@ -112,36 +115,16 @@ class wL:
         if allowSystem : return "\"" + back + "\""
         else : return back
         
-    def exportXML(self, open = 'todo', master = 'xml', tab : str = '    ', depth : int = 0) -> str:
+def export_XML(obj : dict, master = 'xml', tab : str = '    ', depth : int = 0) -> str:
         """wL / Pack a wL object as an XML file and return it as a txt str."""
-        txt : str = ''
-        if open == 'todo'           : dic = self.dict
-        else                        : dic = open
+        txt : str  = ''
+        dic : dict = obj
         if isinstance(dic, list) or isinstance(dic, dict) :
             if depth >= 0                : txt += tab * depth + '<' + master + '>' + '\n'
-            if depth == 0                : txt += tab * 1 + f'<source>wL:v2:py-{self.version}:</source>\n'
             if   isinstance(dic, list)   : 
-                for i in range(len(dic)) : txt += self.exportXML(open = dic[i], master = str(i), tab = tab, depth = depth + 1)
+                for i in range(len(dic)) : txt += export_XML(obj = dic[i], master = str(i), tab = tab, depth = depth + 1)
             elif isinstance(dic, dict)   :
-                for key in dic.keys()    : txt += self.exportXML(open = dic[key], master = self.__str(key, False), tab = tab, depth = depth + 1)
+                for key in dic.keys()    : txt += export_XML(obj = dic[key], master = __wLstr(key, False), tab = tab, depth = depth + 1)
             if depth >= 0                : txt += tab * depth + '</' + master + '>' + '\n'
-        else                             : txt += tab * depth + '<' + master + '>' + self.__str(dic, False) + '</' + master + '>' + '\n'
+        else                             : txt += tab * depth + '<' + master + '>' + __wLstr(dic, False) + '</' + master + '>' + '\n'
         return txt
-    
-    def get(self) -> dict:
-        """wL / Get wL dict."""
-        return self.dict 
-    
-def wL_info() -> str:
-    """wL / Print informations about wL. Return current version id."""
-    print(f"""
-############### wL ###############
-          
- [wilhelm43, version {wL().version}, CC-BY-SA]
-          
-wL is a "markup" "metalanguage" designed to store arbitrary data in a format that is both human-readable and machine-readable.
-The design goals of wL emphasize elementary simplicity, generality, stability, and usability across all programming language.
-          
-##################################
-          """)
-    return wL().version
