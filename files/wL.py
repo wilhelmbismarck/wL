@@ -31,7 +31,7 @@ def import_wL(file : str, fE : bool = True) -> dict:
         """wl / Open wL file in self. Overwritte former dict. Also return wL dict.
         \nFile needed, plus an additional parameter to ignore passive errors."""
         # Start errors
-        if len(file) == 0: raise ValueError('file is blank [wL:00a].')
+        if len(file) == 0: raise ValueError('file is empty [wL:00a].')
         # Definitions
         path  = []
         newD  = {}
@@ -113,7 +113,7 @@ def __wLstr(data, allowSystem : bool = True) -> str:
                 if allowSystem : back += '\\' + letter
             else : back += letter
         if allowSystem : return "\"" + back + "\""
-        else : return back
+        return back
         
 def export_XML(obj : dict, master = 'xml', tab : str = '    ', depth : int = 0) -> str:
         """wL / Pack a wL object as an XML file and return it as a txt str."""
