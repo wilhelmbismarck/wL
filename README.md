@@ -7,9 +7,29 @@ Plus, wL format does not contain no data specialisation or typing, for a linear 
 
 ## Python module
 
-wL's python module contain two files, `wL.py` and `wL-demo.py`. `wl.py` contain module, functions and wL class ; while `wL-demo.py` contain a small demo of wL pack / unpack.
+> "lib" refer to `wL.py`
 
-`WIP`
+### Importing lib
+- by downloading lib
+```python
+import wL as wLlib
+```
+- from pip `WIP`
+
+### Functions
+
+Open a wL file
+```python
+wLlib.import_wL(open("file.wL"))
+```
+Export a `dict` as a wL file
+```python
+wLlib.export_wL(any_dict)
+```
+Export a `dict` as a XML file
+```python
+wLlib.export_XML(any_dict)
+```
 
 ## Licence
 
