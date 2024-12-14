@@ -1,5 +1,7 @@
 # wL
 
+<img src="wL.svg" align="right">
+
 **wL** is a *markup metalanguage* designed to store arbitrary data in a format that is both human-readable and machine-readable.
 
 The design goals of wL emphasize elementary simplicity, generality, stability, and usability across all programming language.
