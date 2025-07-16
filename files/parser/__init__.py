@@ -98,8 +98,8 @@ def load(wL : str) -> dict :
                         raise LoadFileError('wL can not escape sys symbols')
                     value += lt
             elif status in string :
-                if lt in system : 
-                    raise LoadFileError('wL can not escape sys symbols, even with str')
+                if lt in system and previous_status[0] == 'name' : 
+                    raise LoadFileError(f'wL can not escape sys symbols in name in {previous_status[0]}, even with str')
                 if lt == status : 
                     status, status_start = previous_status
                 elif not lt in ignore : 
@@ -146,7 +146,7 @@ def load(wL : str) -> dict :
                             raise LoadFileError(f'wL tag \"exit\" on void (at {i}, starting {status_start})')
                         index = wL.find('>', i + 1)
                         if index != -1 :
-                            i   = index
+                            i   = index - 1
                             run = False
                         else : 
                             raise LoadFileError(f'wL tag \"exit\" not closed (at {i}, starting {status_start})')
