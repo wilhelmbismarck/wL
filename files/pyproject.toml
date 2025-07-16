@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 
 name    = "wLpylib"
-version = "1.3.1"
+version = "1.3.3"
 authors = [ { name="wilhelm43", email="wilhelmbismarck@tutanota.de" } ]
 description = "wL support package for python"
 readme  = "README.md"
