@@ -10,7 +10,7 @@ class ExportConfig :
     """
     
     config_keys : dict[str, tuple[type, object]] = \
-    {'save_info '      : (bool, False, 'saving extra data for some types'),
+    {'save_info'       : (bool, False, 'saving extra data for some types'),
      'save_obj_as_str' : (bool, True, 'saving every obj in a string'),
      'do_lines'        : (bool, True, 'new lines'),
      'do_indent'       : (bool, True, 'indentation'),
@@ -43,16 +43,14 @@ class ExportConfig :
         """
         self.config  : dict = {}
         self.version : str  = '1.0'
+        self.__default()
         if src != {} : self.__from_dict(src)
-        else         : self.__default()
          
     def __set_key(self, configkey : str, value) :
         """Set `configkey` to `value` with check."""
         if configkey in ExportConfig.config_keys :
-            if not configkey in self.config :
-                self.config[configkey] = None
-            item = self.config_keys[configkey]
             self.config[configkey] = value
+            item = self.config_keys[configkey]
             if len(item) > 3 :
                 # Check Type
                 if not isinstance(item[3], tuple)  :
@@ -85,7 +83,7 @@ class ExportConfig :
                 # End Check Type
             return
             # End
-        raise KeyError(f'key {configkey} not a config key')        
+        raise KeyError(f'key {configkey} not a config key [set]')        
           
     def __from_dict(self, src : dict) -> tuple[int, int] :
         """
@@ -130,9 +128,9 @@ class ExportConfig :
         """Get [if existing] `configkey`."""
         if configkey in self.config :
             return self.config[configkey]
-        if configkey in self.config_keys :
+        if configkey in ExportConfig.config_keys :
             return self.config_keys[configkey][1]
-        raise KeyError(f'key {configkey} not a config key')      
+        raise KeyError(f'key {configkey} not a config key [get]')      
     
     @staticmethod
     def doc(configkey : str = None) :
