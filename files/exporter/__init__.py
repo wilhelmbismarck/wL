@@ -89,6 +89,24 @@ def export(obj : dict | list | tuple, config : ExportConfig | None = None) -> st
                 if config['do_lines'] : txt += '\n'
             for key, item in obj.items() :
                 txt += __export(item, str(key), depth + 1, config)
+            if config['save_info'] :
+                txt += __export('Dictionnary', '__class__', depth + 1, config)
+                txt += __export(set(obj.keys()), '__keys__', depth + 1, config)
+                txt += __export(set(len(obj)), '__len__', depth + 1, config)
+            if depth > -1 :
+                txt += indent + "<!>"
+                if config['do_lines'] : txt += '\n'
+        elif isinstance(obj, set) :
+            i = 0
+            if depth > -1 :
+                txt += f"<{__stringify(master)}>"
+                if config['do_lines'] : txt += '\n'
+            for value in obj :
+                txt += __export(value, str(i), depth + 1, config)
+                i += 1
+            if config['save_info'] :
+                txt += __export('Set', '__class__', depth + 1, config)
+                txt += __export(len(obj), '__len__', depth + 1, config)
             if depth > -1 :
                 txt += indent + "<!>"
                 if config['do_lines'] : txt += '\n'
@@ -100,6 +118,9 @@ def export(obj : dict | list | tuple, config : ExportConfig | None = None) -> st
             for item in obj :
                 txt += __export(item, str(key), depth + 1, config)
                 key += 1
+            if config['save_info'] :
+                txt += __export('Iterable', '__class__', depth + 1, config)
+                txt += __export(len(obj), '__len__', depth + 1, config)
             if depth > -1 :
                 txt += indent + "<!>"
                 if config['do_lines'] : txt += '\n'
