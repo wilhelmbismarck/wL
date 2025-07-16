@@ -102,7 +102,7 @@ def load(wL : str) -> dict :
                     raise LoadFileError(f'wL can not escape sys symbols in name in {previous_status[0]}, even with str')
                 if lt == status : 
                     status, status_start = previous_status
-                elif not lt in ignore : 
+                else : 
                     value += lt
             elif lt in string :
                 previous_status = (status, status_start)
