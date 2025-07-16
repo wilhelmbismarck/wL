@@ -7,8 +7,6 @@
 The design goals of wL emphasize elementary simplicity, generality, stability, and usability across all programming language.
 Plus, wL format does not contain no data specialisation or typing, for a linear read.
 
-Consider checking the [GitHub rep](https://github.com/wilhelmbismarck/wL/) to get a full documentation.
-
 ## Packages
 
 `wLpylib` itself does not coutain any function, class.
